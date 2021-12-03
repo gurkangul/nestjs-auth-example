@@ -12,11 +12,14 @@ import { UserService } from './user.service';
 import {
   UserCreateDto,
   UserLoginDto,
+  UserRoleDto,
   UserUpdateDto,
 } from 'tools/dtos/user.dto';
 import { UserEntity } from 'tools/entities/user.entity';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'libs/guards/jwt-auth.guard';
+import { AuthUser } from 'libs/decorators/user.decorator';
+import { Roles } from 'libs/decorators/role.decorator';
 
 @ApiBearerAuth()
 @ApiTags('user')
@@ -53,14 +56,22 @@ export class UserController {
     });
   }
 
-  @Put(':email')
+  @UseGuards(JwtAuthGuard)
+  @Put()
   @HttpCode(200)
   async update(
-    @Param('email') email: string,
+    @AuthUser() user: UserEntity,
     @Body() UserUpdateDto: UserUpdateDto,
   ): Promise<Object> {
-    console.log('params', email);
-    return await this.userService.update(UserUpdateDto, email);
+    return await this.userService.update(UserUpdateDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin')
+  @Put('role')
+  @HttpCode(200)
+  async updateRole(@Body() UserUpdateDto: UserRoleDto): Promise<Object> {
+    return await this.userService.updateRole(UserUpdateDto);
   }
 
   // @Put(':id')

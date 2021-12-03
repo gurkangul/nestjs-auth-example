@@ -4,6 +4,7 @@ import { UserEntity } from 'tools/entities/user.entity';
 import {
   UserCreateDto,
   UserLoginDto,
+  UserRoleDto,
   UserUpdateDto,
 } from 'tools/dtos/user.dto';
 import { Repository } from 'typeorm';
@@ -48,12 +49,21 @@ export class UserService {
 
   async update(
     updateUserDto: UserUpdateDto,
-    email: string,
+    user: UserEntity,
   ): Promise<UserEntity> {
-    let user = await this.findOneByEmail(email);
-    if (updateUserDto?.roles?.length) {
+    if (user) {
+      await this.userRepository.update(user.id, { ...updateUserDto });
+      return this.userRepository.findOne(user.id);
+    } else {
+      throw new HttpException('Something wrong', HttpStatus.CONFLICT);
+    }
+  }
+
+  async updateRole(updateRole: UserRoleDto): Promise<UserEntity> {
+    let user = await this.findOneByEmail(updateRole.userEmail);
+    if (updateRole?.roles?.length) {
       let roles = [];
-      for await (let roleData of updateUserDto?.roles) {
+      for await (let roleData of updateRole?.roles) {
         console.log('aaaa', roleData);
 
         let findRole = await this.roleRepository.findOne({ name: roleData });
@@ -63,10 +73,10 @@ export class UserService {
       }
       this.userRepository.manager.save(roles);
 
-      updateUserDto.roles = roles;
+      updateRole.roles = roles;
     }
     if (user) {
-      user = { ...user, ...updateUserDto };
+      user = { ...user, ...updateRole };
       console.log(user);
       // await this.userRepository.merge(user, updateUserDto);
       return await this.userRepository.save(user);
@@ -84,7 +94,13 @@ export class UserService {
       );
       if (passwordsMatches) {
         let user = await this.findOne(findUserByEmail.id);
-        return this.authService.generateJwt(user);
+        let userJwt = {
+          id: user.id,
+          email: user.email,
+          roles: user.roles,
+          image: user.image,
+        };
+        return this.authService.generateJwt(userJwt);
       } else {
         throw new HttpException(
           'Login was not Successfulll',

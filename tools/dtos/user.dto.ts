@@ -24,6 +24,7 @@ export class UserCreateDto {
 
 // tslint:disable-next-line:max-classes-per-file
 export class UserUpdateDto {
+  @ApiProperty()
   name: string;
   @ApiProperty()
   surname: string;
@@ -33,9 +34,6 @@ export class UserUpdateDto {
   password: string;
   @ApiProperty()
   birthDay: Date;
-
-  @ApiProperty()
-  roles: any[];
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -44,4 +42,11 @@ export class UserLoginDto {
   email: string;
   @ApiProperty()
   password: string;
+}
+
+export class UserRoleDto {
+  @ApiProperty()
+  roles: any[];
+  @ApiProperty()
+  userEmail: string;
 }
